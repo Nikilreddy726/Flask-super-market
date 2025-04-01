@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Bill - REDDY MART</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .bill-header {
+            background-color: orange;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .customer-details {
+            background-color: #ADD8E6;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .bill-details {
+            background-color: #CF9FFF;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .bill-items {
+            margin-top: 20px;
+        }
+        .item-row {
+            margin-bottom: 15px;
+        }
+        .action-buttons {
+            margin-top: 30px;
+        }
+        .logo {
+            max-width: 250px;
+            margin: 20px auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="bill-header text-center">
+            <h1>Product Bill of REDDY MART</h1>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST">
+            <!-- Customer Details -->
+            <div class="customer-details">
+                <h3>Customer Details</h3>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="customer_name" class="form-label">Customer Name</label>
+                        <input type="text" class="form-control" id="customer_name" name="customer_name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="phone" class="form-label">Customer Mobile No.</label>
+                        <input type="text" class="form-control" id="phone" name="phone" maxlength="10" required>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bill Items -->
+            <div id="billItems">
+                <div class="bill-details">
+                    <h3>Billing Details</h3>
+                    <div class="item-row row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Product Name</label>
+                            <select class="form-select" name="product_name_0" required>
+                                <option value="">Select Product</option>
+                                {% for product in products %}
+                                <option value="{{ product }}">{{ product }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Quantity (kg)</label>
+                            <input type="number" step="0.1" class="form-control" name="quantity_0" required>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-danger mt-4 remove-item" style="display: none;">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="button" id="addItem" class="btn btn-primary">Add Another Item</button>
+            
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="REDDY MART" class="logo">
+            
+            <div class="action-buttons text-center">
+                <button type="submit" name="generate_bill" class="btn btn-success btn-lg">Generate Bill</button>
+                <a href="{{ url_for('home') }}" class="btn btn-secondary btn-lg">Back to Home</a>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-capitalize first letter of customer name
+        document.getElementById('customer_name').addEventListener('input', function(e) {
+            if (this.value.length === 1) {
+                this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+            }
+        });
+        
+        // Add item row
+        let itemCount = 1;
+        document.getElementById('addItem').addEventListener('click', function() {
+            const billItems = document.getElementById('billItems');
+            const newItemRow = document.createElement('div');
+            newItemRow.className = 'bill-details item-row row g-3';
+            newItemRow.innerHTML = `
+                <h3>Billing Details</h3>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Product Name</label>
+                        <select class="form-select" name="product_name_${itemCount}" required>
+                            <option value="">Select Product</option>
+                            {% for product in products %}
+                            <option value="{{ product }}">{{ product }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Quantity (kg)</label>
+                        <input type="number" step="0.1" class="form-control" name="quantity_${itemCount}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-danger mt-4 remove-item">Remove</button>
+                    </div>
+                </div>
+            `;
+            billItems.appendChild(newItemRow);
+            itemCount++;
+            
+            // Add event listeners to all remove buttons
+            document.querySelectorAll('.remove-item').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (document.querySelectorAll('.item-row').length > 1) {
+                        this.closest('.item-row').remove();
+                    }
+                });
+            });
+        });
+        
+        // Show remove button for the first item when a second item is added
+        document.getElementById('addItem').addEventListener('click', function() {
+            if (itemCount === 2) {
+                document.querySelector('.remove-item').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
